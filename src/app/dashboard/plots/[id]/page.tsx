@@ -1,0 +1,340 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  ChevronLeft,
+  FileText,
+  MapPin,
+  Loader2,
+  ExternalLink,
+  Download,
+} from "lucide-react";
+import { propertiesApi, Property } from "@/lib/api";
+
+export default function PlotDetailsPage() {
+  const params = useParams();
+  const propertyId = params.id as string;
+
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const data = await propertiesApi.getPropertyById(propertyId);
+        setProperty(data);
+      } catch (error) {
+        console.error("Failed to fetch property:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (propertyId) {
+      fetchProperty();
+    }
+  }, [propertyId]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getOverviewValue = (label: string) => {
+    const field = property?.overviewFields.find(
+      (f) => f.label.toLowerCase() === label.toLowerCase()
+    );
+    return field?.value || "-";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 bg-white font-sans min-h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1e2667]" />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="p-8 bg-white font-sans min-h-full flex flex-col items-center justify-center">
+        <p className="text-gray-500 mb-4">Property not found</p>
+        <Link
+          href="/dashboard/plots"
+          className="text-[#1e2667] hover:underline"
+        >
+          Back to Plots
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 pb-12 bg-white font-sans min-h-full flex flex-col">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Link
+            href="/dashboard/plots"
+            className="hover:bg-gray-100 p-1 rounded-full transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-900" />
+          </Link>
+          <h1 className="text-xl font-bold text-gray-900">Plot Details</h1>
+        </div>
+        <p className="text-gray-500 italic ml-8">
+          View all the details about the Plot here
+        </p>
+      </div>
+
+      {/* Main Plot Info Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Image */}
+          <div className="w-full lg:w-1/3">
+            <div className="relative aspect-video rounded-xl overflow-hidden cursor-pointer group">
+              {property.images[selectedImage] ? (
+                <img
+                  src={property.images[selectedImage]}
+                  alt={property.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <MapPin className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+            </div>
+          </div>
+
+          {/* Details Grid */}
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-y-6 content-center">
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Title -{" "}
+              </span>
+              <span className="text-gray-700 text-lg">{property.title}</span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">Size - </span>
+              <span className="text-gray-700 text-lg">
+                {getOverviewValue("Sizes")}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">Type - </span>
+              <span className="text-gray-700 text-lg">
+                {getOverviewValue("Type")}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Status -{" "}
+              </span>
+              <span
+                className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  property.isActive
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {property.isActive ? "Active" : "Inactive"}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Price -{" "}
+              </span>
+              <span className="text-gray-700 text-lg">
+                {property.priceRange}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Location -
+              </span>
+              <span className="text-gray-700 text-sm">
+                {property.city}, {property.state}
+              </span>
+            </div>
+            <div className="md:col-span-2">
+              <span className="font-medium text-lg text-gray-900">
+                Address -
+              </span>
+              <span className="text-gray-700 text-sm">
+                {property.locationAddress}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Featured -
+              </span>
+              <span
+                className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  property.isFeatured
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {property.isFeatured ? "Yes" : "No"}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-lg text-gray-900">
+                Created -
+              </span>
+              <span className="text-gray-700 text-sm">
+                {formatDate(property.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Photos Section */}
+      {property.images.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Photos</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {property.images.map((image, index) => (
+              <div
+                key={index}
+                onClick={() => setSelectedImage(index)}
+                className={`w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity ${
+                  selectedImage === index ? "ring-2 ring-[#1e2667]" : ""
+                }`}
+              >
+                <img
+                  src={image}
+                  alt={`Photo ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Description Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">
+          {property.descriptionTitle || "Description"}
+        </h2>
+        <p className="text-gray-600">
+          {property.descriptionContent || property.description}
+        </p>
+        <p className="text-gray-500 text-sm mt-4 italic">{property.subtitle}</p>
+      </div>
+
+      {/* Overview Fields */}
+      {property.overviewFields.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Overview</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {property.overviewFields
+              .sort((a, b) => a.displayOrder - b.displayOrder)
+              .map((field) => (
+                <div key={field.id}>
+                  <p className="text-gray-500 text-sm mb-1">{field.label}</p>
+                  <p className="text-gray-900 font-medium">{field.value}</p>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Documents Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-6">Documents</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p className="text-xs text-gray-500 mb-2 font-medium">Brochure:</p>
+            {property.brochureUrl ? (
+              <a
+                href={property.brochureUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-red-500" />
+                <span className="text-sm text-gray-900 font-medium flex-1">
+                  Brochure
+                </span>
+                <Download className="w-4 h-4 text-gray-400" />
+              </a>
+            ) : (
+              <p className="text-sm text-gray-400">No brochure available</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-2 font-medium">
+              Land Layout:
+            </p>
+            {property.landLayoutImageUrl ? (
+              <a
+                href={property.landLayoutImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-blue-500" />
+                <span className="text-sm text-gray-900 font-medium flex-1">
+                  {property.landLayoutTitle || "Land Layout"}
+                </span>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </a>
+            ) : (
+              <p className="text-sm text-gray-400">No layout available</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Location Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Location</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
+          <div>
+            <p className="text-gray-500 text-sm mb-1">City</p>
+            <p className="text-gray-900 font-medium">{property.city}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm mb-1">State</p>
+            <p className="text-gray-900 font-medium">{property.state}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm mb-1">Pincode</p>
+            <p className="text-gray-900 font-medium">{property.pincode}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm mb-1">Coordinates</p>
+            <p className="text-gray-900 font-medium text-sm">
+              {property.latitude}, {property.longitude}
+            </p>
+          </div>
+        </div>
+        <p className="text-gray-600">{property.locationAddress}</p>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="flex justify-end gap-4 mt-8">
+        <Link href="/dashboard/plots">
+          <button className="px-8 py-2 rounded-lg text-white font-medium bg-[#ce1313] hover:bg-opacity-90 transition-opacity cursor-pointer">
+            Back
+          </button>
+        </Link>
+        <button className="px-8 py-2 rounded-lg text-white font-medium bg-[#1e2667] hover:bg-opacity-90 transition-opacity cursor-pointer">
+          {property.isActive ? "Deactivate" : "Activate"}
+        </button>
+      </div>
+    </div>
+  );
+}
