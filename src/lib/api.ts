@@ -462,3 +462,30 @@ export const userActionsApi = {
     return response.data;
   },
 };
+
+// Enquiry Types
+export interface Enquiry {
+  id: string;
+  userId: string;
+  type: string;
+  propertyId: string;
+  layoutId: string | null;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EnquiriesResponse {
+  data: Enquiry[];
+  meta: PaginationMeta;
+}
+
+// Enquiries API
+export const enquiriesApi = {
+  getEnquiries: async (page: number = 1, limit: number = 10) => {
+    const response = await api.get<EnquiriesResponse>(
+      `/admin/enquiries?page=${page}&limit=${limit}`
+    );
+    return response.data;
+  },
+};

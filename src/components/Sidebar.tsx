@@ -12,6 +12,7 @@ import {
   Bot,
   ChevronRight,
   Map,
+  MessageSquare,
 } from "lucide-react";
 import clsx from "clsx";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -22,6 +23,7 @@ const sidebarItems = [
   { name: "Agents", href: "/dashboard/agents", icon: UserCog },
   { name: "Plots", href: "/dashboard/plots", icon: Grid },
   { name: "Layouts", href: "/dashboard/layouts", icon: Map },
+  { name: "Enquiries", href: "/dashboard/enquiries", icon: MessageSquare },
   { name: "Transactions", href: "/dashboard/transactions", icon: FileText },
   { name: "Audit Logs", href: "/dashboard/audit-logs", icon: Bot },
 ];
