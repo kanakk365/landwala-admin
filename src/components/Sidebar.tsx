@@ -93,7 +93,7 @@ const sidebarItems: SidebarItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const [openSections, setOpenSections] = useState<string[]>(["Quick Actions"]);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   const userName = user?.name || "Admin";
   const userInitial = userName.charAt(0).toUpperCase();
