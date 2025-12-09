@@ -345,6 +345,8 @@ export interface LoanApplication {
     email: string;
     phone: string;
     name: string;
+    location?: string;
+    employment?: string;
   };
   fullName: string;
   monthlyIncome: number;
@@ -371,6 +373,8 @@ export interface LegalVerification {
     email: string;
     phone: string;
     name: string;
+    location?: string;
+    employment?: string;
   };
   status: string;
   titleDeedUrl: string;
@@ -394,6 +398,8 @@ export interface LandRegistration {
     email: string;
     phone: string;
     name: string;
+    location?: string;
+    employment?: string;
   };
   status: string;
   name: string;
@@ -417,6 +423,8 @@ export interface LandProtection {
     email: string;
     phone: string;
     name: string;
+    location?: string;
+    employment?: string;
   };
   status: string;
   fullName: string;
@@ -464,15 +472,97 @@ export const userActionsApi = {
 };
 
 // Enquiry Types
+export interface EnquiryUser {
+  id: string;
+  email: string;
+  phone: string;
+  countryCode: string;
+  name: string;
+  profilePicture: string | null;
+  location: string;
+  employment: string;
+  isProfileComplete: boolean;
+  isVerified: boolean;
+  createdAt: string;
+}
+
+export interface EnquiryProperty {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  minPrice: number;
+  maxPrice: number;
+  priceUnit: string;
+  priceRange: string;
+  locationAddress: string;
+  city: string;
+  state: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+  images: string[];
+  brochureUrl: string;
+  landLayoutTitle: string;
+  landLayoutImageUrl: string;
+  descriptionTitle: string;
+  descriptionContent: string;
+  overviewFields: OverviewField[];
+  isActive: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EnquirySlot {
+  id: string;
+  sectionTitle: string;
+  plotNumber: string;
+  area: string;
+  facing: string;
+  price: number;
+  priceUnit: string;
+  priceFormatted: string;
+  status: string;
+  width: string | null;
+  height: string | null;
+  displayOrder: number;
+}
+
+export interface EnquiryLayout {
+  id: string;
+  title: string;
+  location: string;
+  minPrice: number;
+  maxPrice: number;
+  priceUnit: string;
+  priceRange: string;
+  imageUrl: string;
+  layoutImageUrl: string;
+  slots: EnquirySlot[];
+  slotsBySection: Record<string, EnquirySlot[]>;
+  totalSlots: number;
+  availableSlots: number;
+  notAvailableSlots: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Enquiry {
   id: string;
   userId: string;
-  type: string;
-  propertyId: string;
+  type: "LAYOUT" | "PROPERTY";
+  propertyId: string | null;
   layoutId: string | null;
+  slotId: string | null;
   message: string;
   createdAt: string;
   updatedAt: string;
+  user: EnquiryUser;
+  property: EnquiryProperty | null;
+  layout: EnquiryLayout | null;
+  slot: EnquirySlot | null;
 }
 
 export interface EnquiriesResponse {

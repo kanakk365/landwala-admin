@@ -11,32 +11,103 @@ import {
   FileText,
   Bot,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Map,
   MessageSquare,
+  LayoutGrid,
+  Home,
+  ShieldCheck,
+  Layers,
+  LucideIcon,
+  Store,
 } from "lucide-react";
 import clsx from "clsx";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useState } from "react";
 
-const sidebarItems = [
+type SidebarItem = {
+  name: string;
+  href?: string;
+  icon: LucideIcon;
+  children?: SidebarItem[];
+};
+
+const sidebarItems: SidebarItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Users", href: "/dashboard/users", icon: Users },
   { name: "Agents", href: "/dashboard/agents", icon: UserCog },
   { name: "Plots", href: "/dashboard/plots", icon: Grid },
   { name: "Layouts", href: "/dashboard/layouts", icon: Map },
-  { name: "Enquiries", href: "/dashboard/enquiries", icon: MessageSquare },
   { name: "Transactions", href: "/dashboard/transactions", icon: FileText },
   { name: "Audit Logs", href: "/dashboard/audit-logs", icon: Bot },
+  {
+    name: "Explore Categories",
+    icon: Layers,
+    children: [
+      {
+        name: "Land Protection",
+        href: "/dashboard/explore-categories/land-protection",
+        icon: ShieldCheck,
+      },
+      {
+        name: "Land Registrations",
+        href: "/dashboard/explore-categories/land-registrations",
+        icon: FileText,
+      },
+      {
+        name: "Layout Enquiries",
+        href: "/dashboard/explore-categories/layout-enquiries",
+        icon: Map,
+      },
+      {
+        name: "Buy/Sell Plots",
+        href: "/dashboard/explore-categories/buy-sell-plots",
+        icon: Store,
+      },
+    ],
+  },
+  {
+    name: "Quick Actions",
+    icon: LayoutGrid,
+    children: [
+      {
+        name: "Loan Eligibility",
+        href: "/dashboard/loan-eligibility",
+        icon: FileText,
+      },
+      {
+        name: "Latest Listings",
+        href: "/dashboard/latest-listings",
+        icon: Home,
+      },
+      {
+        name: "Legal Verification",
+        href: "/dashboard/legal-verification",
+        icon: ShieldCheck,
+      },
+    ],
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const [openSections, setOpenSections] = useState<string[]>(["Quick Actions"]);
 
   const userName = user?.name || "Admin";
   const userInitial = userName.charAt(0).toUpperCase();
 
+  const toggleSection = (name: string) => {
+    setOpenSections((prev) =>
+      prev.includes(name)
+        ? prev.filter((item) => item !== name)
+        : [...prev, name]
+    );
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex-shrink-0 min-h-screen flex flex-col font-sans">
+    <aside className="w-72 bg-white border-r border-gray-100 flex-shrink-0 min-h-screen flex flex-col font-sans">
       <div className="p-6 flex items-center justify-center">
         <div className="relative w-40 h-12">
           <Image
@@ -49,16 +120,84 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 mt-4">
+      <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
         {sidebarItems.map((item) => {
+          const isExpanded = openSections.includes(item.name);
+          // Check if any child is active to highlight the parent if needed, 
+          // but usually we just highlight the child.
+          // For the parent "Quick Actions", it might be highlighted if expanded? 
+          // The image shows it dark blue when expanded.
+
+          const hasChildren = item.children && item.children.length > 0;
+
+          if (hasChildren) {
+            const isChildActive = item.children?.some(child => pathname === child.href || pathname.startsWith(child.href!));
+
+            return (
+              <div key={item.name}>
+                <button
+                  onClick={() => toggleSection(item.name)}
+                  className={clsx(
+                    "w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer",
+                    isChildActive
+                      ? "bg-[#1e2667] text-white"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="w-5 h-5" />
+                    {item.name}
+                  </div>
+                  {isExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-1 space-y-1">
+                    {item.children!.map((child) => {
+                      const isChildPageActive = child.href
+                        ? (child.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(child.href))
+                        : false;
+
+                      return (
+                        <Link
+                          key={child.name}
+                          href={child.href || "#"}
+                          className={clsx(
+                            "flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer",
+                            isChildPageActive
+                              ? "bg-gray-100 text-[#1e2667]" // Sub-items style? or just text color? 
+                              // Image shows the sub-items on white background (or light gray) with gray text, 
+                              // maybe specific active state?
+                              // Let's assume standard logic: active = text-primary.
+                              // In the image, "Blue" background is for the parent.
+                              // The children seem to be on the white background.
+                              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                          )}
+                        >
+                          {child.icon && <child.icon className="w-4 h-4" />}
+                          {child.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+              : pathname?.startsWith(item.href || "");
+
           return (
             <Link
               key={item.name}
-              href={item.href}
+              href={item.href || "#"}
               className={clsx(
                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer",
                 isActive
